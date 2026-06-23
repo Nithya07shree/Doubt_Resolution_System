@@ -9,7 +9,9 @@ database_url = settings.DATABASE_URL
 connect_args = {}
 
 if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://","postgresql://",1)
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+if database_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
 try:
