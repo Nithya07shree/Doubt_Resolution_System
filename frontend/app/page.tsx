@@ -24,7 +24,7 @@ import AgentCard from './components/AgentCard';
 import DiffViewer from './components/DiffViewer';
 
 // API Server Address
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface HistoryItem {
   id: string;

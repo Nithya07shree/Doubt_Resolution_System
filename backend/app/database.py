@@ -5,7 +5,7 @@ from app.logger import get_logger
 
 logger = get_logger("database")
 
-database_url = settings.DATABASE_URL
+database_url = settings.DATABASE_URL.strip()
 connect_args = {}
 
 if database_url.startswith("postgres://"):
@@ -22,7 +22,7 @@ try:
     )
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base = declarative_base()
-    logger.info("Successfully established connection engine to SQLite database.")
+    logger.info("Successfully established database connection engine.")
 except Exception as e:
     logger.critical(f"Critical error initializing Database connection engine: {e}", exc_info=True)
     raise e
