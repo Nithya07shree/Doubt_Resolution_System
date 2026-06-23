@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 from typing import List
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Dynamically locate the backend base directory and .env file
@@ -12,7 +12,10 @@ ENV_FILE = BASE_DIR / ".env"
 class Settings(BaseSettings):
     OPENAI_API_KEY: str = Field(default="your-openai-api-key-here")
     DATABASE_URL: str = Field(default="sqlite:///./doubt_resolution.db")
-    ALLOWED_ORIGINS: List[str] = Field(default=["http://localhost:3000"])
+    
+    # Store ALLOWED_ORIGINS as a plain string to completely bypass 
+    # Pydantic Settings' internal JSON decoder for complex types.
+    ALLOWED_ORIGINS: str = Field(default="http://localhost:3000")
 
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
@@ -20,19 +23,28 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_allowed_origins(cls, v):
-        if isinstance(v, str):
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        """
+        Parses the ALLOWED_ORIGINS string into a list of origins.
+        Handles both JSON lists (e.g. '["http://localhost:3000"]') and 
+        comma-separated strings (e.g. 'http://localhost:3000,https://app.vercel.app').
+        """
+        v = self.ALLOWED_ORIGINS.strip()
+        if not v:
+            return []
+        
+        # If it looks like a JSON array, attempt parsing
+        if v.startswith("[") and v.endswith("]"):
             try:
-                if (v.startswith("'") and v.endswith("'")) or (v.startswith('"') and v.endswith('"')):
-                    v = v[1:-1]
                 parsed = json.loads(v)
                 if isinstance(parsed, list):
-                    return [str(item) for item in parsed]
+                    return [str(item).strip() for item in parsed]
             except Exception:
-                return [x.strip() for x in v.split(",") if x.strip()]
-        return v
+                pass
+                
+        # Fall back to standard comma separation
+        return [x.strip() for x in v.split(",") if x.strip()]
 
 # Instantiate settings
 try:
