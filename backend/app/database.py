@@ -5,7 +5,6 @@ from app.logger import get_logger
 
 logger = get_logger("database")
 
-# Define engine options; SQLite requires 'check_same_thread': False for FastAPI async sessions
 database_url = settings.DATABASE_URL
 connect_args = {}
 
